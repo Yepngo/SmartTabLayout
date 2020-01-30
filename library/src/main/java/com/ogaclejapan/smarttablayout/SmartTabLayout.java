@@ -70,6 +70,7 @@ public class SmartTabLayout extends HorizontalScrollView {
   private static final int TAB_VIEW_TEXT_COLOR = 0xFC000000;
   private static final int TAB_VIEW_TEXT_MIN_WIDTH = 0;
   private static final boolean TAB_CLICKABLE = true;
+  private static final int NO_TEXT_STYLE = -1;
 
   protected final SmartTabStrip tabStrip;
   private int titleOffset;
@@ -86,6 +87,7 @@ public class SmartTabLayout extends HorizontalScrollView {
   private InternalTabClickListener internalTabClickListener;
   private OnTabClickListener onTabClickListener;
   private boolean distributeEvenly;
+  private int textAppearance;
 
   public SmartTabLayout(Context context) {
     this(context, null);
@@ -116,6 +118,7 @@ public class SmartTabLayout extends HorizontalScrollView {
     int customTabTextViewId = NO_ID;
     boolean clickable = TAB_CLICKABLE;
     int titleOffset = (int) (TITLE_OFFSET_DIPS * density);
+    int textStyle = NO_TEXT_STYLE;
 
     TypedArray a = context.obtainStyledAttributes(
         attrs, R.styleable.stl_SmartTabLayout, defStyle, 0);
@@ -141,6 +144,7 @@ public class SmartTabLayout extends HorizontalScrollView {
         R.styleable.stl_SmartTabLayout_stl_clickable, clickable);
     titleOffset = a.getLayoutDimension(
         R.styleable.stl_SmartTabLayout_stl_titleOffset, titleOffset);
+    textStyle = a.getResourceId(R.styleable.stl_SmartTabLayout_stl_tabTextStyle, textStyle);
     a.recycle();
 
     this.titleOffset = titleOffset;
@@ -154,6 +158,7 @@ public class SmartTabLayout extends HorizontalScrollView {
     this.tabViewTextMinWidth = textMinWidth;
     this.internalTabClickListener = clickable ? new InternalTabClickListener() : null;
     this.distributeEvenly = distributeEvenly;
+    this.textAppearance = textStyle;
 
     if (customTabLayoutId != NO_ID) {
       setCustomTabView(customTabLayoutId, customTabTextViewId);
@@ -348,12 +353,22 @@ public class SmartTabLayout extends HorizontalScrollView {
     TextView textView = new TextView(getContext());
     textView.setGravity(Gravity.CENTER);
     textView.setText(title);
-    textView.setTextColor(tabViewTextColors);
-    textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabViewTextSize);
-    textView.setTypeface(Typeface.DEFAULT_BOLD);
-    textView.setLayoutParams(new LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT));
+    if (textAppearance != NO_TEXT_STYLE) {
+      textView.setTextAppearance(getContext(), textAppearance);
+    } else {
+      textView.setTextColor(tabViewTextColors);
+      textView.setTextSize(TypedValue.COMPLEX_UNIT_PX, tabViewTextSize);
+      textView.setTypeface(Typeface.DEFAULT_BOLD);
 
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+        // If we're running on ICS or newer, enable all-caps to match the Action Bar tab style
+        textView.setAllCaps(tabViewTextAllCaps);
+      }
+
+      if (tabViewTextMinWidth > 0) {
+        textView.setMinWidth(tabViewTextMinWidth);
+      }
+    }
     if (tabViewBackgroundResId != NO_ID) {
       textView.setBackgroundResource(tabViewBackgroundResId);
     } else {
@@ -364,19 +379,11 @@ public class SmartTabLayout extends HorizontalScrollView {
           outValue, true);
       textView.setBackgroundResource(outValue.resourceId);
     }
-
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-      // If we're running on ICS or newer, enable all-caps to match the Action Bar tab style
-      textView.setAllCaps(tabViewTextAllCaps);
-    }
-
     textView.setPadding(
-        tabViewTextHorizontalPadding, 0,
-        tabViewTextHorizontalPadding, 0);
-
-    if (tabViewTextMinWidth > 0) {
-      textView.setMinWidth(tabViewTextMinWidth);
-    }
+            tabViewTextHorizontalPadding, 0,
+            tabViewTextHorizontalPadding, 0);
+    textView.setLayoutParams(new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.MATCH_PARENT));
 
     return textView;
   }
