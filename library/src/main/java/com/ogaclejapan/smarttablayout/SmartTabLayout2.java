@@ -93,6 +93,11 @@ public class SmartTabLayout2 extends HorizontalScrollView {
   private boolean distributeEvenly;
   private int textAppearance;
 
+  /**
+   * An observer to notify the {@link #tabStrip} of changes to recyclerview data sets
+   */
+  private RecyclerView.AdapterDataObserver dataSetObserver;
+
   public SmartTabLayout2(Context context) {
     this(context, null);
   }
@@ -331,6 +336,11 @@ public class SmartTabLayout2 extends HorizontalScrollView {
   public void setViewPager(@NonNull ViewPager2 viewPager, @NonNull RecyclerView.Adapter adapter,
                            @Nullable TabTitleProvider titleProvider) {
     tabStrip.removeAllViews();
+    // remove attached observer to previous viewpager adapter
+    if (dataSetObserver != null && this.viewPager != null &&
+            this.viewPager.getAdapter() != null && this.viewPager.getAdapter().hasObservers()) {
+      this.viewPager.getAdapter().unregisterAdapterDataObserver(dataSetObserver);
+    }
 
     this.viewPager = viewPager;
     this.viewPager.setAdapter(adapter);
@@ -338,6 +348,11 @@ public class SmartTabLayout2 extends HorizontalScrollView {
     if (viewPager != null && viewPager.getAdapter() != null) {
       viewPager.registerOnPageChangeCallback(new InternalViewPagerListener());
       populateTabStrip();
+    }
+    // add a data set change observer
+    if (dataSetObserver == null) {
+      dataSetObserver = new ViewPagerDataSetObserver();
+      adapter.registerAdapterDataObserver(dataSetObserver);
     }
   }
 
@@ -648,6 +663,45 @@ public class SmartTabLayout2 extends HorizontalScrollView {
           return;
         }
       }
+    }
+  }
+
+  private class ViewPagerDataSetObserver extends RecyclerView.AdapterDataObserver {
+    @Override
+    public void onChanged() {
+      super.onChanged();
+      tabStrip.removeAllViews();
+      populateTabStrip();
+    }
+
+    @Override
+    public void onItemRangeChanged(int positionStart, int itemCount) {
+      super.onItemRangeChanged(positionStart, itemCount);
+      onChanged();
+    }
+
+    @Override
+    public void onItemRangeChanged(int positionStart, int itemCount, @Nullable Object payload) {
+      super.onItemRangeChanged(positionStart, itemCount, payload);
+      onChanged();
+    }
+
+    @Override
+    public void onItemRangeInserted(int positionStart, int itemCount) {
+      super.onItemRangeInserted(positionStart, itemCount);
+      onChanged();
+    }
+
+    @Override
+    public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+      super.onItemRangeMoved(fromPosition, toPosition, itemCount);
+      onChanged();
+    }
+
+    @Override
+    public void onItemRangeRemoved(int positionStart, int itemCount) {
+      super.onItemRangeRemoved(positionStart, itemCount);
+      onChanged();
     }
   }
 }
