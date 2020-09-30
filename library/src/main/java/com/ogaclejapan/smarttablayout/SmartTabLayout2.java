@@ -670,8 +670,13 @@ public class SmartTabLayout2 extends HorizontalScrollView {
     @Override
     public void onChanged() {
       super.onChanged();
-      tabStrip.removeAllViews();
-      populateTabStrip();
+      viewPager.post(new Runnable() {
+        @Override
+        public void run() {
+          tabStrip.removeAllViews();
+          populateTabStrip();
+        }
+      });
     }
 
     @Override
