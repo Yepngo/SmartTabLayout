@@ -30,8 +30,8 @@ dependencies {
 license {
 
   sourceSets {
-    main.java.srcDirs = android.sourceSets.main.java.srcDirs
-    main.resources.srcDirs = android.sourceSets.main.resources.srcDirs
+//    main.java.srcDirs = android.sourceSets.main.java.srcDirs
+//    main.resources.srcDirs = android.sourceSets.main.resources.srcDirs
   }
 
   excludes(["**/*.xml"])
